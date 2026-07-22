@@ -6,3 +6,4 @@ aws-resources.env
 build/
 .gradle/
 .idea/
+docker-compose.override.yml
