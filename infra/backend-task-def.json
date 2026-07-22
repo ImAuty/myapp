@@ -1,0 +1,39 @@
+{
+  "family": "myapp-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::743334887511:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "743334887511.dkr.ecr.ap-northeast-1.amazonaws.com/myapp-backend:latest",
+      "portMappings": [{ "containerPort": 8080, "protocol": "tcp" }],
+      "environment": [
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "jdbc:postgresql://myapp-db.cykvu0aqe3ww.ap-northeast-1.rds.amazonaws.com:5432/myapp_db"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "auty_prd"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:743334887511:secret:myapp/db-password-u0SL3n:password::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/myapp-backend",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "backend"
+        }
+      }
+    }
+  ]
+}

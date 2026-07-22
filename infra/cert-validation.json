@@ -1,0 +1,13 @@
+{
+  "Changes": [
+    {
+      "Action": "UPSERT",
+      "ResourceRecordSet": {
+        "Name": "_296c60637e52ff1f9756a1dffb04eb5b.myapp.imauty.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [{ "Value": "_a719abce31cd15ae06b7a2b9a45970ef.jkddzztszm.acm-validations.aws." }]
+      }
+    }
+  ]
+}
