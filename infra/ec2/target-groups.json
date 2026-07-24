@@ -6,7 +6,7 @@
     "VpcId": "vpc-046bbaf9d6d4ff8c3",
     "TargetType": "instance",
     "HealthCheckPath": "/actuator/health",
-    "Targets": [{ "Id": "i-00f1842abeaac406f", "Port": 8080 }]
+    "Targets": [{ "Id": "i-021b06797abd2b1ff", "Port": 8080 }]
   },
   {
     "Name": "myapp-ec2-frontend-tg",
@@ -15,6 +15,6 @@
     "VpcId": "vpc-046bbaf9d6d4ff8c3",
     "TargetType": "instance",
     "HealthCheckPath": "/",
-    "Targets": [{ "Id": "i-00f1842abeaac406f", "Port": 3000 }]
+    "Targets": [{ "Id": "i-021b06797abd2b1ff", "Port": 3000 }]
   }
 ]
