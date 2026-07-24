@@ -94,7 +94,17 @@ terraform plan
 - `iam:AttachUserPolicy` / `iam:DetachUserPolicy`は自分自身に対してのみ、かつ上記7ポリシーARN（自分自身含む）以外はアタッチできないよう`Condition`で制限しています。`AdministratorAccess`を自分に付け直すような権限昇格はできません。
 - `aws_iam_policy`リソースの`description`は設定していません。IAMポリシーの`description`はTerraform上「変更すると作り直し（destroy→create）が必要な属性」であり、このポリシー自身を作り直すと自己管理権限が一瞬失われ、以後のapplyが失敗する可能性があるためです。今後このリソースを編集する際は、作り直し（`must be replaced`）が発生する変更でないか`terraform plan`で必ず確認してください。
 
-**残存リスク**: `myapp-deploy`は`myapp-deploy-iam-bootstrap`ポリシー自体のバージョンを書き換える権限（`CreatePolicyVersion`）を持っているため、理論上は自分自身のガード条件を書き換えて再エスカレーションすることが可能です。これを完全に防ぐにはPermissions Boundary（別の管理者権限でしか外せない、実効権限の上限）の設定が必要ですが、複雑さとのトレードオフで現時点では見送っています。
+### Permissions Boundary
+
+上記の通り`myapp-deploy`は`myapp-deploy-iam-bootstrap`ポリシー自体を書き換えられるため、理論上は自分自身のガード条件を書き換えて再エスカレーションする経路が残っていました。これを塞ぐため、`myapp-deploy`ユーザーに**Permissions Boundary**（`myapp-deploy-boundary`）を設定しています。
+
+Permissions Boundaryは「このユーザーのIDベースポリシーがどうであれ、実効権限はこの範囲を超えられない」という上限を課す仕組みです。効果は「IDベースポリシーの許可」と「Boundaryの許可」の**両方に含まれる権限のみが実際に有効になる**、という交差(AND)で決まります。
+
+**このBoundaryポリシー自体は、意図的にTerraformの管理対象にしていません（唯一の例外）。** 理由は構造的なもので、Boundaryは「本人が変更できないこと」が存在意義そのものだからです。`myapp-deploy`にBoundaryの内容を読み書きする権限を与えてしまうと、Boundaryを設定した意味がなくなります。実際、`myapp-deploy-boundary`の中には`iam:PutUserPermissionsBoundary` / `iam:DeleteUserPermissionsBoundary`への明示的Deny（`Effect: Deny`は他のどのAllowよりも優先される）が入っており、`myapp-deploy`自身は自分のBoundaryを変更・解除できません。設定・変更は必ずAWSコンソールからルート/別の管理者権限で行う必要があります。
+
+動作確認済みの内容:
+- `myapp-deploy`の通常運用（EC2/ALB/Route53/ACM/ECR/Budgets/Cost Explorer、Terraformでの自己ポリシー管理）は影響を受けない
+- `iam:CreateUser`、自分自身への`iam:PutUserPermissionsBoundary`/`DeleteUserPermissionsBoundary`、許可リスト外のポリシー（例: `AmazonS3FullAccess`）の`AttachUserPolicy`は、いずれもBoundaryによって明示的に拒否される
 
 ### 経緯（このユーザーのIAM設定を将来触るときのために）
 
