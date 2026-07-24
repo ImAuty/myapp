@@ -1,0 +1,16 @@
+{
+  "_comment": "Reference spec of the running instance. Not a launch-ready run-instances payload (AMI/KeyName are environment-specific).",
+  "Name": "myapp-ec2",
+  "InstanceType": "t4g.small",
+  "ImageId": "ami-003776ce0fee47dfe",
+  "KeyName": "myapp-key",
+  "SubnetId": "subnet-08f1f08a9880d4529",
+  "VpcId": "vpc-046bbaf9d6d4ff8c3",
+  "SecurityGroupIds": ["sg-049eab087d597371f"],
+  "AssociatePublicIpAddress": true,
+  "IamInstanceProfile": null,
+  "Provisioning": "Manual (SSH + docker compose up -d). No user-data / launch-template automation.",
+  "Runs": [
+    "docker-compose.yaml (repo root) — db (postgres:16), backend, frontend containers on the same host"
+  ]
+}

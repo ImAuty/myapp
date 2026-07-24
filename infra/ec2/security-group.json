@@ -1,0 +1,35 @@
+{
+  "GroupName": "myapp-ec2-sg",
+  "Description": "EC2 instance security group",
+  "VpcId": "vpc-046bbaf9d6d4ff8c3",
+  "Ingress": [
+    {
+      "IpProtocol": "tcp",
+      "FromPort": 8080,
+      "ToPort": 8080,
+      "SourceSecurityGroupId": "sg-0cd3ad5922f1bb4b2",
+      "Description": "Backend (Spring Boot) from ALB only"
+    },
+    {
+      "IpProtocol": "tcp",
+      "FromPort": 3000,
+      "ToPort": 3000,
+      "SourceSecurityGroupId": "sg-0cd3ad5922f1bb4b2",
+      "Description": "Frontend (Next.js) from ALB only"
+    },
+    {
+      "IpProtocol": "tcp",
+      "FromPort": 22,
+      "ToPort": 22,
+      "CidrIp": "<YOUR_IP_ADDRESS>/32",
+      "Description": "SSH from operator IP only (replace with your own IP)"
+    }
+  ],
+  "Egress": [
+    {
+      "IpProtocol": "-1",
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound"
+    }
+  ]
+}

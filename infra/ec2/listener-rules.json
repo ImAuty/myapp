@@ -1,0 +1,23 @@
+{
+  "_comment": "ALB (myapp-alb) listener config. The ALB/ACM cert/Route53 records are shared infra, reused as-is from the Fargate design — only the target groups behind them changed.",
+  "Listeners": [
+    {
+      "Port": 80,
+      "Protocol": "HTTP",
+      "DefaultAction": { "Type": "redirect", "To": "HTTPS 443", "StatusCode": "HTTP_301" }
+    },
+    {
+      "Port": 443,
+      "Protocol": "HTTPS",
+      "CertificateArn": "arn:aws:acm:ap-northeast-1:743334887511:certificate/86081b1a-0dac-4438-b449-9a8274cef6e4",
+      "DefaultAction": { "Type": "forward", "TargetGroup": "myapp-ec2-frontend-tg" },
+      "Rules": [
+        {
+          "Priority": 10,
+          "PathPattern": "/api/*",
+          "Action": { "Type": "forward", "TargetGroup": "myapp-ec2-backend-tg" }
+        }
+      ]
+    }
+  ]
+}

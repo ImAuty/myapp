@@ -1,0 +1,20 @@
+[
+  {
+    "Name": "myapp-ec2-backend-tg",
+    "Protocol": "HTTP",
+    "Port": 8080,
+    "VpcId": "vpc-046bbaf9d6d4ff8c3",
+    "TargetType": "instance",
+    "HealthCheckPath": "/actuator/health",
+    "Targets": [{ "Id": "i-00f1842abeaac406f", "Port": 8080 }]
+  },
+  {
+    "Name": "myapp-ec2-frontend-tg",
+    "Protocol": "HTTP",
+    "Port": 3000,
+    "VpcId": "vpc-046bbaf9d6d4ff8c3",
+    "TargetType": "instance",
+    "HealthCheckPath": "/",
+    "Targets": [{ "Id": "i-00f1842abeaac406f", "Port": 3000 }]
+  }
+]
