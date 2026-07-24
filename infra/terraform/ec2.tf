@@ -12,7 +12,7 @@ resource "aws_instance" "app" {
     volume_type           = "gp3"
     volume_size           = 20
     iops                  = 3000
-    encrypted             = false
+    encrypted             = true
     delete_on_termination = true
   }
 
