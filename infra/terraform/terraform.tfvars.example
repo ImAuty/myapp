@@ -1,1 +1,2 @@
-admin_ssh_cidr = "203.0.113.10/32" # replace with your own IP
+admin_ssh_cidr     = "203.0.113.10/32" # replace with your own IP
+budget_alert_email = "you@example.com" # replace with your own email

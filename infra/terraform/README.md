@@ -11,7 +11,7 @@ Fargate + RDS構成（`../fargate/`）は現在停止中のため、このTerraf
 ```bash
 cd infra/terraform
 cp terraform.tfvars.example terraform.tfvars
-# terraform.tfvars を編集し、admin_ssh_cidr に自分のグローバルIPを設定
+# terraform.tfvars を編集し、admin_ssh_cidr / budget_alert_email を自分の値に設定
 terraform init
 ```
 
@@ -58,6 +58,7 @@ terraform import aws_route53_record.app_aaaa Z05506923OMK303C1PA83_myapp.imauty.
 terraform import aws_route53_record.cert_validation Z05506923OMK303C1PA83__296c60637e52ff1f9756a1dffb04eb5b.myapp.imauty.com_CNAME
 terraform import aws_ecr_repository.backend myapp-backend
 terraform import aws_ecr_repository.frontend myapp-frontend
+terraform import aws_budgets_budget.monthly 743334887511:myapp-monthly-budget
 ```
 
 `aws_lb_target_group_attachment`はTerraformの仕様上importに対応していません。import後の`terraform plan`で2件（backend/frontend）が「追加」として出ますが、これは既存の登録をterraformの管理下に置くだけの安全な操作なので、そのまま`apply`してください。
@@ -69,3 +70,13 @@ terraform plan
 ```
 
 を実行し、意図しない差分がないか必ず確認してから`apply`してください。ここは本番稼働中のポートフォリオサイトを載せているインスタンスなので、意図しない`apply`はサービス停止やデータ消失（DBもこのEC2上にあるため）につながります。
+
+## コスト監視
+
+`aws_budgets_budget.monthly`（`budget.tf`）で月$50の予算に対し、実績50%/80%・予測100%の3段階でメール通知します。Cost Explorer / Budgets APIは実際のリソースのリージョン（ap-northeast-1）に関わらず`us-east-1`でのみ提供されているため、`provider.aws.billing`エイリアスで明示的にus-east-1を指定しています。
+
+現在の内訳を手元で確認したい場合は以下を実行してください。
+
+```bash
+../scripts/cost-report.sh
+```

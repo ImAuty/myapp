@@ -32,3 +32,8 @@ variable "admin_ssh_cidr" {
   description = "CIDR allowed to SSH into the EC2 instance (your IP, e.g. 203.0.113.10/32). No default on purpose: set via terraform.tfvars (gitignored) or -var."
   type        = string
 }
+
+variable "budget_alert_email" {
+  description = "Email address that receives AWS Budgets threshold alerts. No default on purpose: set via terraform.tfvars (gitignored) or -var."
+  type        = string
+}
