@@ -50,6 +50,20 @@ class TodoControllerTest {
     }
 
     @Test
+    fun `POST with a title over 255 chars is rejected`() {
+        // Todo.title is an unannotated String column, so Hibernate defaults it to varchar(255).
+        // This must stay in sync with TodoRequest's @Size(max=...) or an over-limit title passes
+        // validation and then blows up as a 500 on insert instead of a clean 400.
+        mockMvc.perform(
+            post("/api/todos")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(mapOf("title" to "a".repeat(256))))
+        ).andExpect(status().isBadRequest)
+
+        verify(repository, never()).save(any())
+    }
+
+    @Test
     fun `POST with valid title creates a todo`() {
         given(repository.save(any())).willReturn(Todo(id = 1, title = "buy milk", done = false))
 
