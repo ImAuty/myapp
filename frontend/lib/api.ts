@@ -8,9 +8,17 @@ export type Todo = {
     done: boolean;
 };
 
+async function handleResponse<T>(res: Response): Promise<T> {
+    if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `リクエストに失敗しました (${res.status})`);
+    }
+    return res.json();
+}
+
 export async function fetchTodos(): Promise<Todo[]> {
     const res = await fetch(`${API_BASE}/api/todos`, {cache: "no-store"});
-    return res.json();
+    return handleResponse<Todo[]>(res);
 }
 
 export async function createTodo(title: string): Promise<Todo> {
@@ -19,9 +27,13 @@ export async function createTodo(title: string): Promise<Todo> {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({title}),
     });
-    return res.json();
+    return handleResponse<Todo>(res);
 }
 
 export async function deleteTodo(id: number): Promise<void> {
-    await fetch(`${API_BASE}/api/todos/${id}`, {method: "DELETE"});
+    const res = await fetch(`${API_BASE}/api/todos/${id}`, {method: "DELETE"});
+    if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `リクエストに失敗しました (${res.status})`);
+    }
 }
