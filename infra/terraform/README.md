@@ -80,3 +80,18 @@ terraform plan
 ```bash
 ../scripts/cost-report.sh
 ```
+
+## IAM（デプロイユーザーの権限）
+
+`myapp-deploy`ユーザーは元々`AdministratorAccess`が付いていましたが、`iam.tf`で以下の最小権限セットに絞っています（`data "aws_iam_user"`でユーザー自体を参照するのみで、ユーザーの作成・削除はTerraformの管理外です）。
+
+- `AmazonEC2FullAccess` / `ElasticLoadBalancingFullAccess` / `AmazonRoute53FullAccess` / `AWSCertificateManagerFullAccess` / `AmazonEC2ContainerRegistryFullAccess`（AWS管理ポリシー）
+- `myapp-deploy-billing`（カスタムポリシー）: Budgets（`ViewBudget`/`ModifyBudget`/タグ関連）とCost Explorer・Free Tierの読み取り
+
+**別途、コンソールから手動でインラインポリシー`myapp-deploy-iam-bootstrap`をこのユーザーに付けています。** これはTerraformの管理対象に含めていません。理由は、この権限自体が「自分自身のIAMポリシーを読み書きする権限」であり、これをTerraform（＝`myapp-deploy`自身）に管理させると、何かのミスでこの権限を消してしまった場合に、二度と自分で修復できなくなるためです（実際に一度これで詰まりました）。内容は以下の3点のみです。
+
+- `iam:GetUser` / `iam:ListAttachedUserPolicies`（自分自身に対してのみ）
+- `iam:AttachUserPolicy` / `iam:DetachUserPolicy`（自分自身に対して、かつ上記6ポリシーARN以外はアタッチできないよう`Condition`で制限 — `AdministratorAccess`を自分に付け直すような権限昇格はできません）
+- `iam:GetPolicy` / `iam:GetPolicyVersion` / `iam:ListPolicyVersions` / `iam:CreatePolicyVersion` / `iam:DeletePolicyVersion` / タグ関連（`myapp-deploy-billing`ポリシーに対してのみ）
+
+この権限セットを変更する必要がある場合（新しいAWSサービスを使い始める等）は、コンソールからルート/管理者権限で対応してください。
