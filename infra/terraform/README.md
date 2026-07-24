@@ -87,11 +87,20 @@ terraform plan
 
 - `AmazonEC2FullAccess` / `ElasticLoadBalancingFullAccess` / `AmazonRoute53FullAccess` / `AWSCertificateManagerFullAccess` / `AmazonEC2ContainerRegistryFullAccess`（AWS管理ポリシー）
 - `myapp-deploy-billing`（カスタムポリシー）: Budgets（`ViewBudget`/`ModifyBudget`/タグ関連）とCost Explorer・Free Tierの読み取り
+- `myapp-deploy-iam-bootstrap`（カスタムポリシー）: `myapp-deploy`が自分自身のポリシーアタッチと、`myapp-deploy-billing`／このポリシー自身のバージョン管理を行えるようにする、自己管理用の権限
 
-**別途、コンソールから手動でインラインポリシー`myapp-deploy-iam-bootstrap`をこのユーザーに付けています。** これはTerraformの管理対象に含めていません。理由は、この権限自体が「自分自身のIAMポリシーを読み書きする権限」であり、これをTerraform（＝`myapp-deploy`自身）に管理させると、何かのミスでこの権限を消してしまった場合に、二度と自分で修復できなくなるためです（実際に一度これで詰まりました）。内容は以下の3点のみです。
+`myapp-deploy-iam-bootstrap`は最終的に全てTerraformで管理する形に落ち着きました。ポイントは以下の2つです。
 
-- `iam:GetUser` / `iam:ListAttachedUserPolicies`（自分自身に対してのみ）
-- `iam:AttachUserPolicy` / `iam:DetachUserPolicy`（自分自身に対して、かつ上記6ポリシーARN以外はアタッチできないよう`Condition`で制限 — `AdministratorAccess`を自分に付け直すような権限昇格はできません）
-- `iam:GetPolicy` / `iam:GetPolicyVersion` / `iam:ListPolicyVersions` / `iam:CreatePolicyVersion` / `iam:DeletePolicyVersion` / タグ関連（`myapp-deploy-billing`ポリシーに対してのみ）
+- `iam:AttachUserPolicy` / `iam:DetachUserPolicy`は自分自身に対してのみ、かつ上記7ポリシーARN（自分自身含む）以外はアタッチできないよう`Condition`で制限しています。`AdministratorAccess`を自分に付け直すような権限昇格はできません。
+- `aws_iam_policy`リソースの`description`は設定していません。IAMポリシーの`description`はTerraform上「変更すると作り直し（destroy→create）が必要な属性」であり、このポリシー自身を作り直すと自己管理権限が一瞬失われ、以後のapplyが失敗する可能性があるためです。今後このリソースを編集する際は、作り直し（`must be replaced`）が発生する変更でないか`terraform plan`で必ず確認してください。
 
-この権限セットを変更する必要がある場合（新しいAWSサービスを使い始める等）は、コンソールからルート/管理者権限で対応してください。
+**残存リスク**: `myapp-deploy`は`myapp-deploy-iam-bootstrap`ポリシー自体のバージョンを書き換える権限（`CreatePolicyVersion`）を持っているため、理論上は自分自身のガード条件を書き換えて再エスカレーションすることが可能です。これを完全に防ぐにはPermissions Boundary（別の管理者権限でしか外せない、実効権限の上限）の設定が必要ですが、複雑さとのトレードオフで現時点では見送っています。
+
+### 経緯（このユーザーのIAM設定を将来触るときのために）
+
+このセットアップに至るまでに2回、`myapp-deploy`自身のIAM操作権限が一時的に失われるミスがありました。
+
+1. `AdministratorAccess`を外す際に自己管理権限を先に付け忘れ、一切のIAM操作ができなくなった
+2. 復旧用インラインポリシーで`iam:PolicyName`条件キーを使ったが、これはAWSがサポートしていない条件キーで機能せず、インラインポリシー経由の自己管理が動作しなかった（幸い「条件不成立→拒否」という安全な壊れ方だった）
+
+最終的に、カスタム管理ポリシー＋自身のARNをResourceに指定する方式（`myapp-deploy-billing`と同じパターン）に落ち着き、これは動作確認済みです。同じ轍を踏まないよう、この節を残しています。
